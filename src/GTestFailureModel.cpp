@@ -37,12 +37,12 @@ QVariant GTestFailureModel::data(const QModelIndex &index, int role) const
 	QString message = item->node().attributes().namedItem("message").nodeValue();
 
 	static QRegularExpression filerx("(.*)[:]([0-9]+)");
-	static QRegularExpression valueofrx("[Vv]alue of: ([^\n]*)|[Dd]eath test: ([^\n]*)|[Tt]o be equal to: ([^\n]*)");
-	static QRegularExpression actualrx("[Aa]ctual[:][ ]([^\n]*)|[Rr]esult[:][ ]([^\n]*)|(Failed)|[Tt]o be equal to: .*?[\n]\\s*Which is: ([^\n]*)", QRegularExpression::MultilineOption);
-	static QRegularExpression expectedrx("[Ee]xpected[:][ ](.*?)([,][ ]actual|$)|[Ee]rror msg[:]\n(.*)", QRegularExpression::MultilineOption);
-	static QRegularExpression whichisrx("[Ww]hich is: ([^\n]*)");
+    //static QRegularExpression valueofrx("[Vv]alue of: ([^\n]*)|[Dd]eath test: ([^\n]*)|[Tt]o be equal to: ([^\n]*)");
+    //static QRegularExpression actualrx("[Aa]ctual[:][ ]([^\n]*)|[Rr]esult[:][ ]([^\n]*)|(Failed)|[Tt]o be equal to: .*?[\n]\\s*Which is: ([^\n]*)", QRegularExpression::MultilineOption);
+    //static QRegularExpression expectedrx("[Ee]xpected[:][ ](.*?)([,][ ]actual|$)|[Ee]rror msg[:]\n(.*)", QRegularExpression::MultilineOption);
+    //static QRegularExpression whichisrx("[Ww]hich is: ([^\n]*)");
 	static QRegularExpression nearrx("The difference between (.*) and (.*) is (.*), which exceeds (.*), where\n(.*) evaluates to(.*),\n(.*) evaluates to(.*), and\n(.*) evaluates to(.*).");
-	static QRegularExpression predrx("\n(.*) evaluates to (.*), where\n(.*)");
+    //static QRegularExpression predrx("\n(.*) evaluates to (.*), where\n(.*)");
 	static QRegularExpression sehrx("(.*)\n(.*) with (code|description) (.*) thrown in the test body");
 	static QRegularExpression expectedRx(R"(Expected (?<Expectation>\w+) of \w+ value[s]:\n\s{2}(?<Expected>[^\n]*)\n\s+[Ww]hich is:(?<WhichIs>[^\n]*)\n\s{2}(?<ValueOf>[^\n]*)\n\s+[Ww]hich is:(?<Actual>[^\n]*))", QRegularExpression::MultilineOption);
 

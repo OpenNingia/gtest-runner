@@ -178,13 +178,13 @@ MainWindowPrivate::MainWindowPrivate(QStringList tests, bool reset, MainWindow* 
 				emit showMessage("Change detected: " + path + "...");
 				// add a little delay to avoid running multiple instances of the same test build,
 				// and to avoid running the file before visual studio is done writting it.
-				QTimer::singleShot(500, [this, path] {emit runTestInThread(path, true); });
+                QTimer::singleShot(500, [this, path] { runTestInThread(path, true); });
 				
 				// the directories tend to change A LOT for a single build, so let the watcher
 				// cool off a bit. Anyone who is actually building there code multiple times
 				// within 500 msecs on purpose is an asshole, and we won't support them.
 				fileWatcher->blockSignals(true);
-				QTimer::singleShot(500, [this, path] {emit fileWatcher->blockSignals(false); });
+                QTimer::singleShot(500, [this, path] { fileWatcher->blockSignals(false); });
 			}
 			else
 			{
@@ -337,7 +337,7 @@ MainWindowPrivate::MainWindowPrivate(QStringList tests, bool reset, MainWindow* 
 	// find the previous failure when the button is pressed
 	connect(consolePrevFailureButton, &QPushButton::pressed, [this, q]
 	{
-		QRegularExpression regex("\\[\\s+RUN\\s+\\].*?[\n](.*?): ((?!OK).)*?\\[\\s+FAILED\\s+\\]", QRegularExpression::MultilineOption | QRegularExpression::DotMatchesEverythingOption);
+        static QRegularExpression regex("\\[\\s+RUN\\s+\\].*?[\n](.*?): ((?!OK).)*?\\[\\s+FAILED\\s+\\]", QRegularExpression::MultilineOption | QRegularExpression::DotMatchesEverythingOption);
 		auto matches = regex.globalMatch(consoleTextEdit->toPlainText());
 
 		QRegularExpressionMatch match;
@@ -366,7 +366,7 @@ MainWindowPrivate::MainWindowPrivate(QStringList tests, bool reset, MainWindow* 
 	// find the next failure when the button is pressed
 	connect(consoleNextFailureButton, &QPushButton::pressed, [this, q]
 	{
-		QRegularExpression regex("\\[\\s+RUN\\s+\\].*?[\n](.*?): ((?!OK).)*?\\[\\s+FAILED\\s+\\]", QRegularExpression::MultilineOption | QRegularExpression::DotMatchesEverythingOption);
+        static QRegularExpression regex("\\[\\s+RUN\\s+\\].*?[\n](.*?): ((?!OK).)*?\\[\\s+FAILED\\s+\\]", QRegularExpression::MultilineOption | QRegularExpression::DotMatchesEverythingOption);
 		auto matches = regex.globalMatch(consoleTextEdit->toPlainText());
 		
 		QRegularExpressionMatch match;
@@ -399,9 +399,9 @@ MainWindowPrivate::MainWindowPrivate(QStringList tests, bool reset, MainWindow* 
 //--------------------------------------------------------------------------------------------------
 QString MainWindowPrivate::xmlPath(const QString& testPath) const
 {
-	QFileInfo testInfo(testPath);
+    auto appDataLocations = QStandardPaths::standardLocations(QStandardPaths::AppDataLocation);
 	QString hash = QCryptographicHash::hash(testPath.toLatin1(), QCryptographicHash::Md5).toHex();
-	return QStandardPaths::standardLocations(QStandardPaths::AppDataLocation).first() + "/" + hash + ".xml";
+    return appDataLocations.first() + "/" + hash + ".xml";
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -427,8 +427,6 @@ void MainWindowPrivate::addTestExecutable(const QString& path, bool autorun, QDa
 
 	executableCheckedStateHash[path] = autorun;
 
-	QFileInfo xmlResults(xmlPath(path));
-	
 	QModelIndex newRow = executableModel->insertRow(QModelIndex(), path);
 
 	executableModel->setData(newRow, 0, QExecutableModel::ProgressRole);
@@ -493,7 +491,6 @@ void MainWindowPrivate::runTestInThread(const QString& pathToTest, bool notify)
 
 		executableModel->setData(executableModel->index(pathToTest), ExecutableData::RUNNING, QExecutableModel::StateRole);
 		
-		QFileInfo info(pathToTest);
 		QProcess testProcess;
 
 		bool first = true;
@@ -501,10 +498,11 @@ void MainWindowPrivate::runTestInThread(const QString& pathToTest, bool notify)
 		int progress = 0;
 
 		// when the process finished, read any remaining output then quit the loop
-		connect(&testProcess, static_cast<void (QProcess::*)(int)>(&QProcess::finished), &loop, [&, pathToTest]
+        connect(&testProcess, static_cast<void (QProcess::*)(int, QProcess::ExitStatus)>(&QProcess::finished), &loop, [&, pathToTest]
+        (int ec, QProcess::ExitStatus es)
 		{
 			QString output = testProcess.readAllStandardOutput();
-			if(testProcess.exitStatus() == QProcess::NormalExit)
+            if(es == QProcess::NormalExit)
 			{
 				output.append("\nTEST RUN COMPLETED: " + QDateTime::currentDateTime().toString("yyyy-MMM-dd hh:mm:ss.zzz") + "\n\n");
 				emit testResultsReady(pathToTest, notify);
@@ -525,7 +523,7 @@ void MainWindowPrivate::runTestInThread(const QString& pathToTest, bool notify)
 		}, Qt::QueuedConnection);
 
 		// get killed if asked to do so
-		connect(this, &MainWindowPrivate::killTest, &loop, [&, pathToTest]
+        connect(this, &MainWindowPrivate::killTest, &loop, [&, pathToTest]
 		{
 			testProcess.kill();
 			QString output = testProcess.readAllStandardOutput();
@@ -704,7 +702,7 @@ void MainWindowPrivate::selectTest(const QString& testPath)
 	delete failureProxyModel->sourceModel();
 	testCaseTreeView->setSortingEnabled(false);
 	testCaseProxyModel->setSourceModel(new GTestModel(testResultsHash[testPath]));
-	failureProxyModel->clear();
+    failureProxyModel->invalidate();
 	testCaseTreeView->setSortingEnabled(true);
 	testCaseTreeView->expandAll();
 	
@@ -810,10 +808,11 @@ void MainWindowPrivate::loadSettings()
 
 	settings.beginGroup("options");
 	{
+        auto homeLocations = QStandardPaths::standardLocations(QStandardPaths::HomeLocation);
 		if (!settings.value("notifyOnFailure").isNull()) notifyOnFailureAction->setChecked(settings.value("notifyOnFailure").toBool());
 		if (!settings.value("notifyOnSuccess").isNull()) notifyOnSuccessAction->setChecked(settings.value("notifyOnSuccess").toBool());
 		settings.value("theme").isNull() ? defaultThemeAction->setChecked(true) : themeMenu->findChild<QAction*>(settings.value("theme").toString())->trigger();
-		settings.value("testDirectory").isNull() ? m_testDirectory = QStandardPaths::standardLocations(QStandardPaths::HomeLocation).first() : m_testDirectory = settings.value("testDirectory").toString();
+        settings.value("testDirectory").isNull() ? m_testDirectory = homeLocations.first() : m_testDirectory = settings.value("testDirectory").toString();
 	}
 	settings.endGroup();
 }
@@ -878,7 +877,8 @@ void MainWindowPrivate::removeAllTests()
 //--------------------------------------------------------------------------------------------------
 void MainWindowPrivate::clearData()
 {
-	QDir dataDir(QStandardPaths::standardLocations(QStandardPaths::AppDataLocation).first());
+    auto standardLocations = QStandardPaths::standardLocations(QStandardPaths::AppDataLocation);
+    QDir dataDir(standardLocations.first());
 	if (dataDir.exists())
 	{
 		dataDir.removeRecursively();
@@ -1084,7 +1084,6 @@ void MainWindowPrivate::createTestMenu()
 #else
 		filter = "Test Executables (*)";
 #endif
-		QString filename = "";
 		QStringList filenames = QFileDialog::getOpenFileNames(q_ptr, "Select Test Executable", m_testDirectory, filter);
 
 		if (filenames.isEmpty())

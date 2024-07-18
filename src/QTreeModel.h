@@ -75,8 +75,8 @@ public:
 	//		ABSTRACT INTERFACE
 	//////////////////////////////////////////////////////////////////////////
 	
-	virtual int			columnCount(const QModelIndex &parent) const								= 0;
-	virtual QVariant	data(const QModelIndex &index, int role = Qt::DisplayRole) const override	= 0;
+    int			columnCount(const QModelIndex &parent) const override						= 0;
+    QVariant	data(const QModelIndex &index, int role = Qt::DisplayRole) const override	= 0;
 
 public:
 
@@ -263,7 +263,7 @@ public:
 	//		INHERITED INTERFACE
 	//////////////////////////////////////////////////////////////////////////
 
-	virtual QModelIndex	index(int row, int column, const QModelIndex &parent = QModelIndex()) const
+    virtual QModelIndex	index(int row, int column, const QModelIndex &parent = QModelIndex()) const override
 	{
 		if (!hasIndex(row, column, parent))
 			return QModelIndex();
@@ -286,12 +286,12 @@ public:
 		}
 	}
 
-	virtual Qt::ItemFlags flags(const QModelIndex &index) const override
+    virtual Qt::ItemFlags flags(const QModelIndex &index) const override
 	{
 		return Qt::ItemIsEnabled | Qt::ItemIsSelectable;
 	}
 
-	virtual QModelIndex	parent(const QModelIndex& index) const override
+    virtual QModelIndex	parent(const QModelIndex& index) const override
 	{
 		if (!index.isValid())
 			return QModelIndex();
@@ -305,12 +305,12 @@ public:
 		return createIndex(static_cast<int>(tree.index_of(parentItr)), 0, parentItr.internalPointer());
 	}
 
-	virtual iterator parent(const iterator& item) const
+    virtual iterator parent(const iterator& item) const
 	{
 		return tree.parent(item);
 	}
 
-	virtual int	rowCount(const QModelIndex& parent = QModelIndex()) const override
+    virtual int	rowCount(const QModelIndex& parent = QModelIndex()) const override
 	{		
 		iterator parentItr;
 		if (parent.column() > 0)
@@ -324,12 +324,12 @@ public:
 		return rowCount(parentItr);
 	}
 
-	virtual int rowCount(const iterator& item) const
+    virtual int rowCount(const iterator& item) const
 	{
 		return static_cast<int>(tree.child_count(item));
 	}
 
-	virtual QModelIndex sibling(int row, int column, const QModelIndex &index) const override
+    virtual QModelIndex sibling(int row, int column, const QModelIndex &index) const override
 	{
 		if (!index.isValid())
 			return QModelIndex();
@@ -343,22 +343,22 @@ public:
 			return QModelIndex();
 	}
 
-	virtual iterator sibling(int index, const iterator& item) const
+    virtual iterator sibling(int index, const iterator& item) const
 	{
 		return tree.child_at(tree.parent(item), index);
 	}
 
-	virtual local_iterator sibling_begin(const iterator& item) const
+    virtual local_iterator sibling_begin(const iterator& item) const
 	{
 		return tree.begin_children(tree.parent(item));
 	}
 
-	virtual local_iterator sibling_end(const iterator& item) const
+    virtual local_iterator sibling_end(const iterator& item) const
 	{
 		return tree.end_children(tree.parent(item));
 	}
 
-	virtual bool hasChildren(const QModelIndex &parent) const override
+    virtual bool hasChildren(const QModelIndex &parent) const override
 	{
 		iterator parentItr;
 
@@ -370,17 +370,18 @@ public:
 		return hasChildren(parentItr);
 	}
 
-	virtual bool hasChildren(const iterator& parent) const
+    virtual bool hasChildren(const iterator& parent) const
 	{
 		return tree.child_count(parent) > 0;
 	}
 
-	virtual QList<QModelIndex> children(const QModelIndex& index) const
+    virtual QList<QModelIndex> children(const QModelIndex& index) const
 	{
 		QList<QModelIndex> list;
 		for (int i = 0; i < rowCount(index); i++)
 		{
-			list << index.child(i, 0);
+            // list << index.child(i, 0);
+            list << this->index(i, 0, index);
 		}
 		return list;
 	}

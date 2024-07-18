@@ -110,7 +110,7 @@ public slots:
     void replaceAll();
 
 protected:
-    void changeEvent(QEvent *e);
+    virtual void changeEvent(QEvent *e) override;
 
 	virtual bool event(QEvent *e) override;
 	

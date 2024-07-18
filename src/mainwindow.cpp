@@ -6,6 +6,7 @@
 #include <QDropEvent>
 #include <QFileInfo>
 #include <QMimeData>
+#include <QScreen>
 
 //--------------------------------------------------------------------------------------------------
 //	FUNCTION: MainWindow
@@ -77,8 +78,8 @@ void MainWindow::changeEvent(QEvent *e)
 //--------------------------------------------------------------------------------------------------
 QSize MainWindow::sizeHint() const
 {
-	QDesktopWidget* desktop = QApplication::desktop();
-	return 0.5 * desktop->screen(desktop->primaryScreen())->size();
+    auto screen = qApp->primaryScreen();
+    return screen->virtualSize() * 0.75;
 }
 
 //--------------------------------------------------------------------------------------------------
