@@ -139,7 +139,7 @@ public:
 	virtual Qt::ItemFlags flags(const QModelIndex &index) const override;
 	virtual bool removeRows(int row, int count, const QModelIndex &parent = QModelIndex()) override;
 	virtual QModelIndex removeRow(int row, const QModelIndex &parent = QModelIndex()) override;
-	virtual QModelIndex	index(int row, int column, const QModelIndex &parent = QModelIndex()) const;
+    virtual QModelIndex	index(int row, int column, const QModelIndex &parent = QModelIndex()) const override;
 	virtual bool moveRows(const QModelIndex &sourceParent, int sourceRow, int count, const QModelIndex &destinationParent, int destinationChild) override;
 	virtual QMap<int, QVariant> itemData(const QModelIndex &index) const override;
 	virtual bool setItemData(const QModelIndex &index, const QMap<int, QVariant> &roles) override;

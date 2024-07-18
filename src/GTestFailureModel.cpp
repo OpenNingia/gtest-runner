@@ -4,6 +4,8 @@
 #include <QtXml>
 #include <QRegExp>
 
+#include <iostream>
+
 GTestFailureModel::GTestFailureModel(DomItem* root, QObject *parent)
 	: QAbstractItemModel(parent), failIcon(":/images/fail"), rootItem(nullptr)
 {
@@ -35,13 +37,14 @@ QVariant GTestFailureModel::data(const QModelIndex &index, int role) const
 	QString message = item->node().attributes().namedItem("message").nodeValue();
 
 	static QRegularExpression filerx("(.*)[:]([0-9]+)");
-	static QRegularExpression valueofrx("[Vv]alue of: ([^\n]*)|[Dd]eath test: ([^\n]*)|[Tt]o be equal to: ([^\n]*)");
-	static QRegularExpression actualrx("[Aa]ctual[:][ ]([^\n]*)|[Rr]esult[:][ ]([^\n]*)|(Failed)|[Tt]o be equal to: .*?[\n]\\s*Which is: ([^\n]*)", QRegularExpression::MultilineOption);
-	static QRegularExpression expectedrx("[Ee]xpected[:][ ](.*?)([,][ ]actual|$)|[Ee]rror msg[:]\n(.*)", QRegularExpression::MultilineOption);
-	static QRegularExpression whichisrx("[Ww]hich is: ([^\n]*)");
+    //static QRegularExpression valueofrx("[Vv]alue of: ([^\n]*)|[Dd]eath test: ([^\n]*)|[Tt]o be equal to: ([^\n]*)");
+    //static QRegularExpression actualrx("[Aa]ctual[:][ ]([^\n]*)|[Rr]esult[:][ ]([^\n]*)|(Failed)|[Tt]o be equal to: .*?[\n]\\s*Which is: ([^\n]*)", QRegularExpression::MultilineOption);
+    //static QRegularExpression expectedrx("[Ee]xpected[:][ ](.*?)([,][ ]actual|$)|[Ee]rror msg[:]\n(.*)", QRegularExpression::MultilineOption);
+    //static QRegularExpression whichisrx("[Ww]hich is: ([^\n]*)");
 	static QRegularExpression nearrx("The difference between (.*) and (.*) is (.*), which exceeds (.*), where\n(.*) evaluates to(.*),\n(.*) evaluates to(.*), and\n(.*) evaluates to(.*).");
-	static QRegularExpression predrx("\n(.*) evaluates to (.*), where\n(.*)");
+    //static QRegularExpression predrx("\n(.*) evaluates to (.*), where\n(.*)");
 	static QRegularExpression sehrx("(.*)\n(.*) with (code|description) (.*) thrown in the test body");
+    static QRegularExpression expectedRx(R"(Expected (?<Expectation>\w+) of \w+ value[s]:\n\s{2}(?<Expected>[^\n]*)(\n\s+[Ww]hich is:(?<WhichIs>[^\n]*))?\n\s{2}(?<ValueOf>[^\n]*)\n\s+[Ww]hich is:(?<Actual>[^\n]*))", QRegularExpression::MultilineOption);
 
 	QRegularExpressionMatch fileMatch;
 	QRegularExpressionMatch valueofMatch;
@@ -53,6 +56,22 @@ QVariant GTestFailureModel::data(const QModelIndex &index, int role) const
 	QRegularExpressionMatch sehMatch;
 
 	QString filename;
+
+	auto expectedRxMatch = expectedRx.match(message);
+	auto expectation = expectedRxMatch.captured("Expectation");
+	auto valueOf = expectedRxMatch.captured("ValueOf");
+	auto actual = expectedRxMatch.captured("Actual");
+	auto expected = expectedRxMatch.captured("Expected");
+	auto whichIs = expectedRxMatch.captured("WhichIs");
+
+	qDebug() << message;
+    qDebug() << expectation;
+    qDebug() << valueOf;
+    qDebug() << actual;
+    qDebug() << expected;
+    qDebug() << whichIs;
+
+	std::cout << message.toStdString() << std::endl;
 
 	switch (role)
 	{
@@ -70,7 +89,7 @@ QVariant GTestFailureModel::data(const QModelIndex &index, int role) const
 			return fileMatch.captured(2);
 			break;
 		case 2:
-			valueofMatch = valueofrx.match(message);
+			/*valueofMatch = valueofrx.match(message);
 			for (int i = 1; i <= valueofMatch.lastCapturedIndex(); ++i)
 				if (!valueofMatch.captured(i).isEmpty()) return valueofMatch.captured(i);
 			nearMatch = nearrx.match(message);
@@ -78,9 +97,10 @@ QVariant GTestFailureModel::data(const QModelIndex &index, int role) const
 			predMatch = predrx.match(message);
 			if (!predMatch.captured(1).isEmpty())  return predMatch.captured(1);
 			sehMatch = sehrx.match(message);
-			return sehMatch.captured(2);
+			return sehMatch.captured(2);*/
+			return valueOf;
 		case 3:
-			actualMatch = actualrx.match(message);
+			/*actualMatch = actualrx.match(message);
 			for (int i = 1; i <= actualMatch.lastCapturedIndex(); ++i)
 				if (!actualMatch.captured(i).isEmpty()) return actualMatch.captured(i);
 			nearMatch = nearrx.match(message);
@@ -88,24 +108,20 @@ QVariant GTestFailureModel::data(const QModelIndex &index, int role) const
 			predMatch = predrx.match(message);
 			if (!predMatch.captured(2).isEmpty()) return predMatch.captured(2);
 			sehMatch = sehrx.match(message);
-			return sehMatch.captured(4);
+			return sehMatch.captured(4);*/
+			return actual;
 		case 4:
-			expectedMatch = expectedrx.match(message);
+			/*expectedMatch = expectedrx.match(message);
 			for (int i = 1; i <= expectedMatch.lastCapturedIndex(); ++i)
 				if (!expectedMatch.captured(i).isEmpty()) return expectedMatch.captured(i);
 			nearMatch = nearrx.match(message);
 			if (!nearMatch.captured(5).isEmpty()) return nearMatch.captured(5);
 			predMatch = predrx.match(message);
 			if (!predMatch.captured(1).isEmpty()) return "true";
-			return QVariant();
+			return QVariant();*/
+			return expected;
 		case 5:
-			whichisMatch = whichisrx.match(message);
-			for (int i = 1; i <= whichisMatch.lastCapturedIndex(); ++i)
-				if (!whichisMatch.captured(i).isEmpty()) return whichisMatch.captured(i);
-			nearMatch = nearrx.match(message);
-			if (!nearMatch.captured(6).isEmpty()) return nearMatch.captured(6);
-			predMatch = predrx.match(message);
-			return predMatch.captured(3);
+			return whichIs;
 		case 6:
 			nearMatch = nearrx.match(message);
 			return nearMatch.captured(3);
@@ -144,7 +160,7 @@ QVariant GTestFailureModel::data(const QModelIndex &index, int role) const
 Qt::ItemFlags GTestFailureModel::flags(const QModelIndex &index) const
 {
 	if (!index.isValid())
-		return 0;
+        return Qt::ItemFlags{};
 
 	return QAbstractItemModel::flags(index);
 }

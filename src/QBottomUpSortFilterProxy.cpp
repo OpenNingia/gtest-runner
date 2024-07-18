@@ -22,6 +22,8 @@ QBottomUpSortFilterProxy::~QBottomUpSortFilterProxy()
 bool QBottomUpSortFilterProxy::filterAcceptsRow(int sourceRow, const QModelIndex &sourceParent) const
 {
 	bool iAmAccepted = sourceModel()->data(sourceParent, Qt::DisplayRole).toString().contains(filterRegExp());
+    Q_UNUSED(iAmAccepted);
+
 	std::string debug = sourceModel()->data(sourceParent, Qt::DisplayRole).toString().toStdString();
 	return (filterAcceptsDescendant(sourceRow, sourceParent) || filterAcceptsAncestor(sourceParent));
 	return true;
