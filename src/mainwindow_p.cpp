@@ -849,6 +849,30 @@ void MainWindowPrivate::removeTest(const QModelIndex &index)
 	}
 }
 
+void MainWindowPrivate::removeAllTests()
+{
+	if (executablePaths.count() == 0)
+		return;
+
+	if (QMessageBox::question(this->q_ptr, QString("Remove Test?"), "Do you want to remove all tests?",
+		QMessageBox::Yes | QMessageBox::No, QMessageBox::No) == QMessageBox::Yes)
+	{
+		executableModel->removeRows(0, executablePaths.count());
+
+    	// remove all data related to this test
+		fileWatcher->removePaths(executablePaths);
+		executablePaths.clear();
+		testResultsHash.clear();		
+
+		QAbstractItemModel* oldFailureModel = failureProxyModel->sourceModel();
+		QAbstractItemModel* oldtestCaseModel = testCaseProxyModel->sourceModel();
+		failureProxyModel->setSourceModel(new GTestFailureModel(nullptr));
+		testCaseProxyModel->setSourceModel(new GTestModel(QDomDocument()));
+		delete oldFailureModel;
+		delete oldtestCaseModel;
+	}
+}
+
 //--------------------------------------------------------------------------------------------------
 //	FUNCTION: clearData
 //--------------------------------------------------------------------------------------------------
@@ -1034,6 +1058,7 @@ void MainWindowPrivate::createTestMenu()
 
 	addTestAction = new QAction(QIcon(":/images/green"), "Add Test...", q);
 	selectAndRemoveTestAction = new QAction(q->style()->standardIcon(QStyle::SP_TrashIcon), "Remove Test...", testMenu);
+	removeAllTestsAction = new QAction(q->style()->standardIcon(QStyle::SP_TrashIcon), "Remove All Tests...", testMenu);
 	selectAndRunTest = new QAction(q->style()->standardIcon(QStyle::SP_BrowserReload), "Run Test...", testMenu);
 	selectAndRunTest->setShortcut(QKeySequence(Qt::SHIFT + Qt::Key_F5));
 	selectAndRunAllTest = new QAction(q->style()->standardIcon(QStyle::SP_BrowserReload), "Run All Test...", testMenu);
@@ -1043,6 +1068,7 @@ void MainWindowPrivate::createTestMenu()
 
 	testMenu->addAction(addTestAction);
 	testMenu->addAction(selectAndRemoveTestAction);
+	testMenu->addAction(removeAllTestsAction);
 	testMenu->addSeparator();
 	testMenu->addAction(selectAndRunTest);
 	testMenu->addAction(selectAndRunAllTest);
@@ -1087,6 +1113,11 @@ void MainWindowPrivate::createTestMenu()
 	{
 		removeTest(getTestIndexDialog("Select test to remove:"));
 	});
+
+	connect(removeAllTestsAction, &QAction::triggered, [this]
+	{
+		removeAllTests();
+	});	
 
 	connect(selectAndRunTest, &QAction::triggered, [this]
 	{

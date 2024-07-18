@@ -154,6 +154,7 @@ public:
 	QAction*								addTestAction;							///< Opens a dialog to add a test executable.
 	QAction*								selectAndKillTest;						///< Selects and kills a running test.
 	QAction*								selectAndRemoveTestAction;				///< Remove a test after choosing it from a list.
+	QAction*                                removeAllTestsAction;                   ///< Remove all tests from the list
 	QAction*								selectAndRunTest;						///< Run a test after selecting it from a list.																	///< program options.
 	QAction*								selectAndRunAllTest;					///< Run all tests in the list.
 
@@ -206,6 +207,7 @@ public:
 	void saveSettings() const;
 	void loadSettings();
 	void removeTest(const QModelIndex &index);
+	void removeAllTests();
 	void clearData();
 	void clearSettings();
 
