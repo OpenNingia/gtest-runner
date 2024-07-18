@@ -44,7 +44,7 @@ QVariant GTestFailureModel::data(const QModelIndex &index, int role) const
 	static QRegularExpression nearrx("The difference between (.*) and (.*) is (.*), which exceeds (.*), where\n(.*) evaluates to(.*),\n(.*) evaluates to(.*), and\n(.*) evaluates to(.*).");
     //static QRegularExpression predrx("\n(.*) evaluates to (.*), where\n(.*)");
 	static QRegularExpression sehrx("(.*)\n(.*) with (code|description) (.*) thrown in the test body");
-	static QRegularExpression expectedRx(R"(Expected (?<Expectation>\w+) of \w+ value[s]:\n\s{2}(?<Expected>[^\n]*)\n\s+[Ww]hich is:(?<WhichIs>[^\n]*)\n\s{2}(?<ValueOf>[^\n]*)\n\s+[Ww]hich is:(?<Actual>[^\n]*))", QRegularExpression::MultilineOption);
+    static QRegularExpression expectedRx(R"(Expected (?<Expectation>\w+) of \w+ value[s]:\n\s{2}(?<Expected>[^\n]*)(\n\s+[Ww]hich is:(?<WhichIs>[^\n]*))?\n\s{2}(?<ValueOf>[^\n]*)\n\s+[Ww]hich is:(?<Actual>[^\n]*))", QRegularExpression::MultilineOption);
 
 	QRegularExpressionMatch fileMatch;
 	QRegularExpressionMatch valueofMatch;
